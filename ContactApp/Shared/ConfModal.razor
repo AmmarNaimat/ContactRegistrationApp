@@ -1,0 +1,45 @@
+﻿<div  tabindex="-1" role="dialog" style="display:@(IsVisible ? "block" : "none")">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmation</h5>
+                <button type="button" class="close" @onclick="() => CloseModal()" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @Message
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="() => CloseModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" @onclick="OnConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public string Message { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    private bool IsVisible { get; set; }
+
+
+    public void Show()
+    {
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    public void CloseModal()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task OnConfirmClick()
+    {
+        CloseModal();
+        await OnConfirm.InvokeAsync(null);
+    }
+}

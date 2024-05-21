@@ -1,0 +1,108 @@
+﻿@page "/ContactList"
+<ConfModal @ref="confirmationModal" Message="Do you really want to delete this?" OnConfirm="() => DeleteContact()" />
+
+<h3>Contact List</h3>
+<div class="input-group mb-3">
+    <input type="text" class="form-control" id="txtSearch" placeholder="Search contacts..." @bind="searchQuery">
+</div>
+<table class="table" >
+    <thead>
+        <tr>
+            <th @onclick="() => SortContacts(nameof(Contact.Id))">ID @GetSortIcon(nameof(Contact.Id))</th>
+            <th @onclick="() => SortContacts(nameof(Contact.FirstName))">First Name @GetSortIcon(nameof(Contact.FirstName))</th>
+            <th @onclick="() => SortContacts(nameof(Contact.LastName))">Last Name @GetSortIcon(nameof(Contact.LastName))</th>
+            <th @onclick="() => SortContacts(nameof(Contact.Email))">Email @GetSortIcon(nameof(Contact.Email))</th>
+            <th @onclick="() => SortContacts(nameof(Contact.PhoneNumber))">Phone Number @GetSortIcon(nameof(Contact.PhoneNumber))</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="tblContact">
+        @foreach (var contact in FilteredContacts)
+        {
+            <tr>
+                <td>@contact.Id</td>
+                <td>@contact.FirstName</td>
+                <td>@contact.LastName</td>
+                <td>@contact.Email</td>
+                <td>@contact.PhoneNumber</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" @onclick="() => EditContact(contact.Id)">Edit</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteContactConfirmation(contact.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+
+    private string SortField = nameof(Contact.Id);
+    private string SortType = "asc";
+    private string searchQuery = "";
+    private List<Contact> contacts;
+    private ConfModal confirmationModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        contacts = ContactService.GetContacts();
+    }
+
+    private List<Contact> FilteredContacts => SortedContacts()
+        .Where(c => string.IsNullOrWhiteSpace(searchQuery)
+                     || c.FirstName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)
+                     || c.LastName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)
+                     || c.Email.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)
+                     || c.PhoneNumber.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private List<Contact> SortedContacts() { 
+        if (SortType == "asc")
+            return contacts.OrderBy(contact => contact.GetType().GetProperty(SortField)
+              .GetValue(contact)).ToList();
+        else
+            return contacts.OrderByDescending(contact => contact.GetType().GetProperty(SortField)
+            .GetValue(contact)).ToList();
+    }
+    
+
+    private void SortContacts(string sortField)
+    {
+        if (SortField == sortField)
+        {
+            SortType = SortType == "asc" ? "desc" : "asc";
+        }
+        else
+        {
+            SortField = sortField;
+            SortType = "asc";
+        }
+    }
+
+    private string GetSortIcon(string sortField)
+    {
+        if (SortField != sortField)
+        {
+            return "↕";
+        }
+        return SortType == "asc" ? "↑" : "↓";
+    }
+
+    private void EditContact(int id)
+    {
+        NavigationManager.NavigateTo($"/edit-contact/{id}");
+    }
+
+    private int contactIdToDelete;
+
+    private void DeleteContactConfirmation(int id)
+    {
+        contactIdToDelete = id;
+        confirmationModal.Show();
+    }
+
+    private void DeleteContact()
+    {
+        confirmationModal.CloseModal();
+        ContactService.DeleteContact(contactIdToDelete);
+    }
+}

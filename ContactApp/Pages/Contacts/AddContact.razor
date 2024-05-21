@@ -1,0 +1,40 @@
+﻿@page "/add-contact"
+<h3>Add Contact</h3>
+
+<EditForm Model="contact" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="firstName">First Name</label>
+        <InputText id="firstName" @bind-Value="contact.FirstName" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <InputText id="lastName" @bind-Value="contact.LastName" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email" @bind-Value="contact.Email" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="phoneNumber">Phone Number</label>
+        <InputText id="phoneNumber" @bind-Value="contact.PhoneNumber" class="form-control" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Save</button>
+</EditForm>
+
+@code {
+    private Contact contact = new Contact();
+
+    private void HandleValidSubmit()
+    {
+        if (ContactService.ValidateContact(contact))
+        {
+            ContactService.AddContact(contact);
+            NavigationManager.NavigateTo("/ContactList");
+        }
+        
+    }
+}
